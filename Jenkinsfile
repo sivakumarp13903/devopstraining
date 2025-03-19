@@ -17,21 +17,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh "docker build -t $DOCKER_IMAGE ."
             }
         }
 
         stage('Login to Docker Registry') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-sivakumarp', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                 }
             }
         }
 
         stage('Push to Container Registry') {
             steps {
-                sh 'docker push $DOCKER_IMAGE'
+                sh "docker push $DOCKER_IMAGE"
             }
         }
 
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+                    if [ "$(docker ps -aq --filter name=$CONTAINER_NAME)" ]; then
                         docker stop $CONTAINER_NAME || true
                         docker rm $CONTAINER_NAME || true
                     fi
@@ -50,17 +50,17 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                sh 'docker run -d -p 5001:5000 --name $CONTAINER_NAME $DOCKER_IMAGE'
+                sh "docker run -d -p 5001:5000 --name $CONTAINER_NAME $DOCKER_IMAGE"
             }
         }
     }
 
     post {
         success {
-            echo "Build, push, and container execution successful!"
+            echo "✅ Build, push, and container execution successful!"
         }
         failure {
-            echo "Build or container execution failed."
+            echo "❌ Build or container execution failed. Check logs."
         }
     }
 }
